@@ -16,6 +16,9 @@ if "reset_kljuc" not in st.session_state:
     st.session_state.reset_kljuc = 0
 
 # --- SIDEBAR: PODEŠAVANJA ---
+# MALI DISKRETNI POTPIS (ITALLIC I SVEDEN)
+st.sidebar.markdown("*<span style='font-size: 0.8rem; color: gray;'>powered by Reomirano</span>*", unsafe_allow_html=True)
+
 st.sidebar.header("⚙️ Tvoja Podešavanja")
 st.sidebar.info("Ovi podaci se koriste za generisanje QR koda kako bi novac bio uplaćen na ispravan račun.")
 
