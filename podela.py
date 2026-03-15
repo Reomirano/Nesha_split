@@ -79,7 +79,7 @@ with col_levo:
         st.image(fajl, use_container_width=True)
 
 with col_desno:
-    if st.button("🔄 Novi unos (Reset)", use_container_width=True):
+    if st.button("🔄 Novi unos", use_container_width=True):
         st.session_state.reset_kljuc += 1
         st.rerun()
     
