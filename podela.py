@@ -124,7 +124,7 @@ if odabrani:
             st.error("⚠️ Niste uneli iznose za sve odabrane članove!")
         else:
             c_racun = ocisti_racun(moj_racun)
-            qr_cols = st.columns(3) 
+            qr_cols = st.columns(5) 
             for i, (ime, dug) in enumerate(finalni_dugovi.items()):
                 if dug > 0:
                     iz_fmt = "{:.2f}".format(dug).replace('.', ',')
