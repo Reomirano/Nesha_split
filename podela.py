@@ -65,7 +65,7 @@ for ime in sortirani_clanovi:
         st.rerun()
 
 # --- GLAVNI PANEL ---
-st.title("💰 Nesha_split System ®")
+st.title("Nesha Split")
 st.write(f"Novac ide na: **{moje_ime}** | Račun: **{moj_racun}**")
 st.divider()
 
