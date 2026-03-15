@@ -137,6 +137,7 @@ if odabrani:
                         # SMANJILI SMO WIDTH SA 160 NA 120 DA BI STALI
                         st.image(buf.getvalue(), width=120) 
                         st.caption(f"{dug:.2f} RSD")
-st.divider() # Prvo staviš liniju da odvojiš od glavnog dela
-st.caption("Aplikacija je namenjena isključivo za plaćanja u okviru IPS sistema Narodne banke Srbije. Pre potvrde plaćanja u vašoj mBanking aplikaciji, obavezno proverite ispravnost unetih podataka. Autor ne snosi odgovornost za eventualne pogrešne uplate.")
-st.caption("This app is designed solely for payments within the Serbian IPS system. Please verify all payment details before confirming. The author is not responsible for any incorrect payments or technical errors.")                        
+st.write("") 
+st.divider() 
+st.caption("**Napomena:** Aplikacija je namenjena isključivo za plaćanja u okviru **IPS sistema Narodne banke Srbije**. Pre potvrde plaćanja, obavezno **proverite ispravnost podataka**. Autor ne snosi odgovornost za pogrešne uplate.")
+st.caption("**Disclaimer:** This app is designed solely for **Serbian IPS payments**. Please verify all details before confirming. The author is not responsible for any incorrect payments.")                        
