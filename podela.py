@@ -19,7 +19,7 @@ if "reset_kljuc" not in st.session_state:
 # MALI DISKRETNI POTPIS (ITALLIC I SVEDEN)
 st.sidebar.markdown("*<span style='font-size: 0.8rem; color: gray;'>powered by Reomirano</span>*", unsafe_allow_html=True)
 
-st.sidebar.header("⚙️ Tvoja Podešavanja")
+st.sidebar.header("⚙️ Tvoja podešavanja")
 st.sidebar.info("Ovi podaci se koriste za generisanje QR koda kako bi novac bio uplaćen na ispravan račun.")
 
 moje_ime = st.sidebar.text_input("Tvoje ime i prezime:", value="", key="user_name", placeholder="ime i prezime vlasnika računa")
