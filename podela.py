@@ -124,7 +124,7 @@ if odabrani:
             st.error("⚠️ Niste uneli iznose za sve odabrane članove!")
         else:
             c_racun = ocisti_racun(moj_racun)
-            qr_cols = st.columns(5) 
+            qr_cols = st.columns(6)
             for i, (ime, dug) in enumerate(finalni_dugovi.items()):
                 if dug > 0:
                     iz_fmt = "{:.2f}".format(dug).replace('.', ',')
@@ -132,7 +132,8 @@ if odabrani:
                     qr_img = qrcode.make(ips_data)
                     buf = BytesIO()
                     qr_img.save(buf, format="PNG")
-                    with qr_cols[i % 3]:
+                    with qr_cols[i % 6]: # Mora biti isti broj kao gore u columns
                         st.markdown(f"**{ime}**")
-                        st.image(buf.getvalue(), width=160)
+                        # SMANJILI SMO WIDTH SA 160 NA 120 DA BI STALI
+                        st.image(buf.getvalue(), width=120) 
                         st.caption(f"{dug:.2f} RSD")
