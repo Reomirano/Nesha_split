@@ -22,8 +22,8 @@ st.sidebar.markdown("*<span style='font-size: 0.8rem; color: gray;'>powered by R
 st.sidebar.header("⚙️ Tvoja podešavanja")
 st.sidebar.info("Ovi podaci se koriste za generisanje QR koda kako bi novac bio uplaćen na ispravan račun.")
 
-moje_ime = st.sidebar.text_input("Tvoje ime i prezime:", value="", key="user_name", placeholder="ime i prezime vlasnika računa")
-moj_racun = st.sidebar.text_input("Tvoj Broj Računa:", value="", key="user_bank", placeholder="18-ocifreni broj tekućeg računa")
+moje_ime = st.sidebar.text_input("Administrator:", value="", key="user_name", placeholder="ime i prezime vlasnika računa")
+moj_racun = st.sidebar.text_input("Broj računa administratora:", value="", key="user_bank", placeholder="18-ocifreni broj tekućeg računa")
 
 st.sidebar.divider()
 st.sidebar.header("👥 Tvoje kolege")
@@ -61,7 +61,7 @@ col_levo, col_desno = st.columns([1, 1])
 
 with col_levo:
     st.subheader("📸 Račun")
-    fajl = st.file_uploader("Otpremi sliku", type=['jpg', 'jpeg', 'png'], key=f"fajl_{sufiks}")
+    fajl = st.file_uploader("Otpremi dokument", type=['jpg', 'jpeg', 'png'], key=f"fajl_{sufiks}")
     if fajl:
         st.image(fajl, use_container_width=True)
 
