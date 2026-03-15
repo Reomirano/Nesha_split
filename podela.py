@@ -8,60 +8,42 @@ def ocisti_racun(racun):
     samo_cifre = re.sub(r'\D', '', racun)
     return samo_cifre.zfill(18)
 
-# --- KONFIGURACIJA I DIZAJN ---
-st.set_page_config(page_title="Nesha_split ®", layout="centered", initial_sidebar_state="collapsed")
+# --- KONFIGURACIJA ---
+st.set_page_config(page_title="Nesha_split ®", layout="wide")
 
-st.markdown(f"""
+# Dodajemo samo tvoj (R) diskretno u ugao, bez kvarenja boja
+st.markdown("""
     <style>
-    /* Suptilna pozadina */
-    .stApp {{
-        background: linear-gradient(135deg, #1e1e2f 0%, #111119 100%);
-        background-attachment: fixed;
-    }}
-    
-    /* Znak (R) u krugu - diskretno pozicioniran */
-    .reomirano-trademark {{
+    .reomirano-znak {
         position: fixed;
-        top: 20px;
-        right: 20px;
-        font-size: 2rem;
-        font-weight: 300;
-        color: rgba(212, 175, 55, 0.3);
-        border: 2px solid rgba(212, 175, 55, 0.2);
+        top: 10px;
+        right: 80px;
+        font-size: 1.5rem;
+        color: rgba(0,0,0,0.2);
+        font-weight: bold;
+        border: 1px solid rgba(0,0,0,0.1);
         border-radius: 50%;
-        width: 50px;
-        height: 50px;
+        width: 35px;
+        height: 35px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-family: serif;
-        z-index: 1000;
-    }}
-
-    /* Staklene kartice za unose */
-    div[data-testid="stVerticalBlock"] > div:has(div.stNumberInput) {{
-        background: rgba(255, 255, 255, 0.03);
-        padding: 20px;
-        border-radius: 15px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
-    }}
+    }
     </style>
+    <div class="reomirano-znak">R</div>
     """, unsafe_allow_html=True)
 
-# Prikaz zaštitnog znaka
-st.markdown('<div class="reomirano-trademark">R</div>', unsafe_allow_html=True)
-
-# --- SESIJA I LOGIKA ---
+# KLJUČ ZA RESET
 if "reset_kljuc" not in st.session_state:
     st.session_state.reset_kljuc = 0
 
-# --- SIDEBAR: PODEŠAVANJA I EKIPA ---
+# --- SIDEBAR: PODEŠAVANJA ---
 st.sidebar.header("⚙️ Podešavanja")
-moje_ime = st.sidebar.text_input("Tvoje ime i prezime:", value="", key="user_name", placeholder="Ime vlasnika računa")
-moj_racun = st.sidebar.text_input("Tvoj Broj Računa:", value="", key="user_bank", placeholder="18-ocifreni broj")
+moje_ime = st.sidebar.text_input("Tvoje ime:", value="", key="user_name")
+moj_racun = st.sidebar.text_input("Tvoj račun:", value="", key="user_bank")
 
 st.sidebar.divider()
-st.sidebar.header("👥 Kolege")
+st.sidebar.header("👥 Ekipa")
 
 if 'clanovi_univerzalni' not in st.session_state:
     st.session_state.clanovi_univerzalni = []
@@ -74,10 +56,6 @@ def dodaj_clana():
 
 st.sidebar.text_input("Dodaj člana:", key="novo_ime_input", on_change=dodaj_clana)
 
-if st.sidebar.button("Obriši sve članove"):
-    st.session_state.clanovi_univerzalni = []
-    st.rerun()
-
 sortirani_clanovi = sorted(st.session_state.clanovi_univerzalni)
 for ime in sortirani_clanovi:
     col_p, col_b = st.sidebar.columns([4, 1])
@@ -87,12 +65,12 @@ for ime in sortirani_clanovi:
         st.rerun()
 
 # --- GLAVNI PANEL ---
-st.title("💰 Nesha_split System")
-st.markdown(f"<p style='color: grey;'>Vlasnik: {moje_ime} | Račun: {moj_racun}</p>", unsafe_allow_html=True)
+st.title("💰 Nesha_split System ®")
+st.write(f"Novac ide na: **{moje_ime}** | Račun: **{moj_racun}**")
 st.divider()
 
 sufiks = st.session_state.reset_kljuc
-col_levo, col_desno = st.columns([1, 1.2])
+col_levo, col_desno = st.columns([1, 1])
 
 with col_levo:
     st.subheader("📸 Račun")
@@ -101,66 +79,48 @@ with col_levo:
         st.image(fajl, use_container_width=True)
 
 with col_desno:
-    if st.button("🔄 Novi unos", use_container_width=True, type="primary"):
+    if st.button("🔄 Novi unos (Reset)", use_container_width=True):
         st.session_state.reset_kljuc += 1
         st.rerun()
     
     st.subheader("✍️ Podaci")
-    col_iznos, col_dostava = st.columns(2)
-    with col_iznos:
-        iznos_racuna = st.number_input("Iznos (RSD):", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"racun_{sufiks}")
-    with col_dostava:
-        dostava = st.number_input("Dostava (RSD):", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"dostava_{sufiks}")
+    c1, c2 = st.columns(2)
+    iznos_racuna = c1.number_input("Iznos (RSD):", min_value=0.0, step=10.0, value=None, key=f"r_{sufiks}")
+    dostava = c2.number_input("Dostava (RSD):", min_value=0.0, step=10.0, value=None, key=f"d_{sufiks}")
 
-    v_racun = iznos_racuna if iznos_racuna is not None else 0.0
-    v_dostava = dostava if dostava is not None else 0.0
-    suma_ukupno = v_racun + v_dostava
+    suma_ukupno = (iznos_racuna or 0) + (dostava or 0)
+    st.markdown(f"### Ukupno za deljenje: {suma_ukupno:.2f} RSD")
 
-    st.markdown(f"### Ukupno: {suma_ukupno:.2f} RSD")
-
-    def promenuo_sve():
-        check_kljuc = f"sve_{sufiks}"
-        multi_kljuc = f"ucesnici_{sufiks}"
-        if st.session_state[check_kljuc]:
-            st.session_state[multi_kljuc] = sortirani_clanovi
-        else:
-            st.session_state[multi_kljuc] = []
-
-    st.checkbox("Odaberi sve učesnike", key=f"sve_{sufiks}", on_change=promenuo_sve)
+    st.checkbox("Odaberi sve", key=f"sve_{sufiks}", on_change=lambda: st.session_state.update({f"ucesnici_{sufiks}": sortirani_clanovi if st.session_state[f"sve_{sufiks}"] else []}))
     odabrani = st.multiselect("Ko učestvuje:", options=sortirani_clanovi, key=f"ucesnici_{sufiks}")
     nacin = st.radio("Metoda:", ["Ravnopravno", "Ručni unos"], horizontal=True, key=f"nacin_{sufiks}")
 
     finalni_dugovi = {}
     if odabrani:
         if nacin == "Ravnopravno":
-            po_osobi = suma_ukupno / len(odabrani) if len(odabrani) > 0 else 0
-            st.info(f"Po osobi: **{po_osobi:.2f} RSD**")
-            for o in odabrani:
-                finalni_dugovi[o] = po_osobi
+            po_osobi = suma_ukupno / len(odabrani)
+            st.success(f"Svako plaća po: {po_osobi:.2f} RSD")
+            for o in odabrani: finalni_dugovi[o] = po_osobi
         else:
             for o in odabrani:
-                finalni_dugovi[o] = st.number_input(f"Iznos za {o}:", min_value=0.0, key=f"rucni_{o}_{sufiks}", value=None, placeholder="0.00")
+                finalni_dugovi[o] = st.number_input(f"Iznos za {o}:", min_value=0.0, key=f"ruc_{o}_{sufiks}")
 
 st.divider()
 
-# --- QR SEKCIJA ---
-if odabrani:
-    if st.button("🔥 GENERIŠI QR KODOVE", use_container_width=True):
-        if not moje_ime or not moj_racun:
-            st.error("⚠️ Popunite svoje podatke u sidebar-u (levo)!")
-        elif nacin == "Ručni unos" and any(v is None for v in finalni_dugovi.values()):
-            st.error("⚠️ Niste uneli iznose za sve!")
-        else:
-            c_racun = ocisti_racun(moj_racun)
-            qr_cols = st.columns(3) # Manje kolona za bolju preglednost na mobilnom
-            for i, (ime, dug) in enumerate(finalni_dugovi.items()):
-                if dug > 0:
-                    iz_fmt = "{:.2f}".format(dug).replace('.', ',')
-                    ips_data = f"K:PR|V:01|C:1|R:{c_racun}|N:{moje_ime}|I:RSD{iz_fmt}|SF:289|S:Rucak-{ime}"
-                    qr_img = qrcode.make(ips_data)
-                    buf = BytesIO()
-                    qr_img.save(buf, format="PNG")
-                    with qr_cols[i % 3]:
-                        st.markdown(f"**{ime}**")
-                        st.image(buf.getvalue(), width=180)
-                        st.caption(f"{dug:.2f} RSD")
+if odabrani and st.button("🔥 GENERIŠI QR KODOVE", use_container_width=True, type="primary"):
+    if not moje_ime or not moj_racun:
+        st.error("⚠️ Unesi svoje ime i račun u sidebar levo!")
+    else:
+        c_racun = ocisti_racun(moj_racun)
+        qr_cols = st.columns(3)
+        for i, (ime, dug) in enumerate(finalni_dugovi.items()):
+            if dug and dug > 0:
+                iz_fmt = "{:.2f}".format(dug).replace('.', ',')
+                ips_data = f"K:PR|V:01|C:1|R:{c_racun}|N:{moje_ime}|I:RSD{iz_fmt}|SF:289|S:Rucak-{ime}"
+                qr_img = qrcode.make(ips_data)
+                buf = BytesIO()
+                qr_img.save(buf, format="PNG")
+                with qr_cols[i % 3]:
+                    st.write(f"**{ime}**")
+                    st.image(buf.getvalue(), width=150)
+                    st.write(f"{dug:.2f} RSD")
