@@ -13,8 +13,10 @@ st.set_page_config(page_title="Podela troškova", layout="wide")
 with st.expander("📖 Kako ovo radi?"):
     st.write("""
     1. **Unesi svoj račun:** Prvi put unesi broj svog tekućeg računa.
-    2. **Dodaj ekipu:** Upiši imena kolega i iznose.
-    3. **Skeniranje:** Kolege otvore svoju mBanking aplikaciju, odaberu 'IPS Skeniraj' i skeniraju kod sa tvog ekrana.
+    2. **Dodaj učesnike:** Upiši imena kolega.
+    3. **Ukucaj iznose:** Unesi vrednosti sa računa i cenu dostave
+    4. **Odaberi način podele:** Da li delite račun na ravne časti ili svako plaća svoj ceh?
+    4. **Skeniranje:** Otvorite svoju mBanking aplikaciju, odaberite 'IPS Skeniraj' i skenirajte sa ekrana ili pošaljite skrinšotove za naplatu.
     
     *Vaši podaci se ne čuvaju na serveru i vidljivi su samo vama.*
     """)
