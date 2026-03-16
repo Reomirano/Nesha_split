@@ -10,7 +10,7 @@ def ocisti_racun(racun):
 
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Podela troškova", layout="wide")
-with st.expander("📖 Kako ovo radi? (Kratko uputstvo)"):
+with st.expander("📖 Kako ovo radi?"):
     st.write("""
     1. **Unesi svoj račun:** Prvi put unesi broj svog tekućeg računa.
     2. **Dodaj ekipu:** Upiši imena kolega i iznose.
