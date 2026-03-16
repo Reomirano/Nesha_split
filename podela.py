@@ -10,6 +10,14 @@ def ocisti_racun(racun):
 
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Podela troškova", layout="wide")
+with st.expander("📖 Kako ovo radi? (Kratko uputstvo)"):
+    st.write("""
+    1. **Unesi svoj račun:** Prvi put unesi broj svog tekućeg računa.
+    2. **Dodaj ekipu:** Upiši imena kolega i iznose.
+    3. **Skeniranje:** Kolege otvore svoju mBanking aplikaciju, odaberu 'IPS Skeniraj' i skeniraju kod sa tvog ekrana.
+    
+    *Vaši podaci se ne čuvaju na serveru i vidljivi su samo vama.*
+    """)
 
 # KLJUČ ZA RESET
 if "reset_kljuc" not in st.session_state:
