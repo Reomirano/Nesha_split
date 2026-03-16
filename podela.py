@@ -12,11 +12,11 @@ def ocisti_racun(racun):
 st.set_page_config(page_title="Podela troškova", layout="wide")
 with st.expander("📖 Kako ovo radi?"):
     st.write("""
-    1. **Unesi svoj račun:** Prvi put unesi broj svog tekućeg računa.
-    2. **Dodaj učesnike:** Upiši imena kolega.
-    3. **Ukucaj iznose:** Unesi vrednosti sa računa i cenu dostave
-    4. **Odaberi način podele:** Da li delite račun na ravne časti ili svako plaća svoj ceh?
-    4. **Skeniranje:** Otvorite svoju mBanking aplikaciju, odaberite 'IPS Skeniraj' i skenirajte sa ekrana ili pošaljite skrinšotove za naplatu.
+    1. **Unesi svoj račun:** Prvo unesi svoje ime i broj tekućeg računa.
+    2. **Dodaj učesnike:** Upiši imena učesnika.
+    3. **Ukucaj iznose:** Unesi vrednosti sa računa i cenu dostave.
+    4. **Odaberi način podele:** Odaberi da li delite račun na ravne časti ili svako plaća svoj ceh.
+    4. **Skeniranje:** Otvorite svoje mBanking aplikacije, odaberite 'IPS Skeniraj' i skenirajte sa ekrana ili pošalji skrinšotove za naplatu.
     
     *Vaši podaci se ne čuvaju na serveru i vidljivi su samo vama.*
     """)
