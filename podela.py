@@ -73,7 +73,7 @@ with col_desno:
     validna_podela = False
 
     if nacin == "Ravnopravno":
-        broj_ljudi = st.number_input("Ukupan broj osoba (i ti):", min_value=1, value=2, step=1, key=f"br_ljudi_{sufiks}")
+        broj_ljudi = st.number_input("Ukupan broj osoba:", min_value=1, value=2, step=1, key=f"br_ljudi_{sufiks}")
         if broj_ljudi > 1:
             po_osobi = suma_ukupno / broj_ljudi
             st.info(f"Po osobi: **{po_osobi:.2f} RSD**")
