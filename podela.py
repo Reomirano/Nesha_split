@@ -100,11 +100,17 @@ with col_desno:
         if sortirani:
             odabrani = st.multiselect("Ko učestvuje:", options=sortirani, key=f"ucesnici_{sufiks}")
             
-            if odabrani:
+        if odabrani:
                 # PRORAČUN FIKSNOG UČEŠĆA U DOSTAVI
                 br_ucesnika = len(odabrani)
                 fiksna_dostava = v_dostava / br_ucesnika
-                st.write(f"Učešće u dostavi: **{fiksna_dostava:.2f} RSD**")
+                
+                # DODATA POZADINSKA BOJA (Bledo ljubičasta)
+                st.markdown(f"""
+                    <div style="background-color: #f3e5f5; padding: 10px; border-radius: 5px; border-left: 5px solid #9c27b0; margin-bottom: 20px;">
+                        <span style="color: #4a148c;">Učešće u dostavi: <b>{fiksna_dostava:.2f} RSD</b></span>
+                    </div>
+                """, unsafe_allow_html=True)
                 
                 trenutna_suma = 0.0
                 for o in odabrani:
@@ -158,4 +164,7 @@ if validna_podela and suma_ukupno > 0:
                             st.image(buf.getvalue(), width=130)
                             st.caption(f"{dug:.2f} RSD")
 
-st.caption("<br><br>*Aplikacija za NBS IPS plaćanja.*", unsafe_allow_html=True)
+st.write("") 
+st.divider() 
+st.caption("**Napomena:** Aplikacija je namenjena isključivo za plaćanja u okviru **IPS sistema Narodne banke Srbije**. Pre potvrde plaćanja, obavezno **proverite ispravnost podataka**. Autor ne snosi odgovornost za pogrešne uplate.")
+st.caption("**Disclaimer:** This app is designed solely for **Serbian IPS payments**. Please verify all details before confirming. The author is not responsible for any incorrect payments.")   
