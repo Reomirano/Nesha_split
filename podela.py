@@ -11,7 +11,6 @@ def ocisti_racun(racun):
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Podela troškova", layout="wide")
 
-# KLJUČ ZA RESET
 if "reset_kljuc" not in st.session_state:
     st.session_state.reset_kljuc = 0
 
@@ -24,12 +23,12 @@ moj_racun = st.sidebar.text_input("Broj računa administratora:", value="", key=
 # --- GLAVNI PANEL ---
 st.title("💰 Podela troškova")
 
-# VRAĆENO UPUTSTVO
 with st.expander("📖 Kako ovo radi?"):
     st.write("""
     1. **Unesi svoj račun:** U levom meniju unesi svoje ime i broj računa.
     2. **Unesi iznose:** Upiši vrednost sa računa i cenu dostave.
-    3. **Odaberi metodu:** * **Ravnopravno:** Unesi broj ljudi i dobijaš univerzalni QR kod.
+    3. **Odaberi metodu:**
+        * **Ravnopravno:** Unesi broj ljudi i dobijaš univerzalni QR kod.
         * **Ručni unos:** Dodaš imena kolega i uneseš pojedinačnu vrednost.
     4. **Skeniranje:** Kolege otvore mBanking, izaberu 'IPS' i očitaju kod sa ekrana.
     """)
@@ -49,6 +48,9 @@ with col_levo:
 with col_desno:
     if st.button("🔄 Novi unos / Reset", use_container_width=True, type="primary"):
         st.session_state.reset_kljuc += 1
+        # Čistimo i listu učesnika pri totalnom resetu
+        if 'clanovi_univerzalni' in st.session_state:
+            st.session_state.clanovi_univerzalni = []
         st.rerun()
     
     st.subheader("✍️ Podaci")
@@ -69,7 +71,7 @@ with col_desno:
     validna_podela = False
 
     if nacin == "Ravnopravno":
-        broj_ljudi = st.number_input("Ukupan broj osoba (uključujući i tebe):", min_value=1, value=2, step=1, key=f"br_ljudi_{sufiks}")
+        broj_ljudi = st.number_input("Ukupan broj osoba (i ti):", min_value=1, value=2, step=1, key=f"br_ljudi_{sufiks}")
         if broj_ljudi > 1:
             po_osobi = suma_ukupno / broj_ljudi
             st.info(f"Po osobi: **{po_osobi:.2f} RSD**")
@@ -80,21 +82,20 @@ with col_desno:
         if 'clanovi_univerzalni' not in st.session_state:
             st.session_state.clanovi_univerzalni = []
 
-        def dodaj_clana():
+        # AUTOMATSKO DODAVANJE
+        def dodaj_i_cekiraj():
             ime = st.session_state.novo_ime_tmp.strip()
             if ime and ime not in st.session_state.clanovi_univerzalni:
                 st.session_state.clanovi_univerzalni.append(ime)
             st.session_state.novo_ime_tmp = ""
 
-        st.text_input("Dodaj kolegu na listu:", key="novo_ime_tmp", on_change=dodaj_clana, placeholder="Ime + Enter")
+        st.text_input("Dodaj kolegu na listu (Enter dodaje i bira):", key="novo_ime_tmp", on_change=dodaj_i_cekiraj)
         
         sortirani = sorted(st.session_state.clanovi_univerzalni)
         
         if sortirani:
-            odaberi_sve = st.checkbox("Odaberi sve učesnike", key=f"all_{sufiks}")
-            podrazumevani = sortirani if odaberi_sve else []
-            
-            odabrani = st.multiselect("Ko učestvuje:", options=sortirani, default=podrazumevani, key=f"ucesnici_{sufiks}")
+            # default=sortirani znači da su svi automatski štiklirani čim se dodaju
+            odabrani = st.multiselect("Ko učestvuje:", options=sortirani, default=sortirani, key=f"ucesnici_{sufiks}")
             
             if odabrani:
                 trenutna_suma = 0.0
@@ -113,7 +114,7 @@ with col_desno:
                 else:
                     st.error(f"Višak: **{abs(ostatak):.2f} RSD**")
             
-            if st.button("Obriši listu kolega"):
+            if st.button("Obriši celu listu"):
                 st.session_state.clanovi_univerzalni = []
                 st.rerun()
 
@@ -131,7 +132,6 @@ if validna_podela and suma_ukupno > 0:
                 qr_img = qrcode.make(ips_data)
                 buf = BytesIO()
                 qr_img.save(buf, format="PNG")
-                
                 _, col_qr, _ = st.columns([1, 1, 1])
                 with col_qr:
                     st.image(buf.getvalue(), caption=f"Iznos: {finalni_dugovi['Zajednički']:.2f} RSD", use_container_width=True)
