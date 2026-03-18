@@ -57,14 +57,14 @@ with col_desno:
     
     st.subheader("✍️ Podaci")
     c1, c2 = st.columns(2)
-    iznos_racuna = c1.number_input("Iznos sa računa (RSD):", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"racun_{sufiks}")
-    dostava = c2.number_input("Dostava (RSD):", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"dostava_{sufiks}")
+    iznos_racuna = c1.number_input("Iznos sa računa (RSD):", min_value=0.0, step=10.0, value=None, placeholder="0,00", key=f"racun_{sufiks}")
+    dostava = c2.number_input("Dostava (RSD):", min_value=0.0, step=10.0, value=None, placeholder="0,00", key=f"dostava_{sufiks}")
 
     v_racun = iznos_racuna if iznos_racuna is not None else 0.0
     v_dostava = dostava if dostava is not None else 0.0
     suma_ukupno = v_racun + v_dostava
 
-    st.markdown(f"### Ukupno: {suma_ukupno:.2f} RSD")
+    st.markdown(f"### Ukupno: {f'{suma_ukupno:.2f}'.replace('.', ',')} RSD")
     st.divider()
 
     nacin = st.radio("Metoda podele:", ["Ravnopravno", "Ručni unos"], horizontal=True, key=f"nacin_{sufiks}")
@@ -76,7 +76,7 @@ with col_desno:
         broj_ljudi = st.number_input("Ukupan broj osoba:", min_value=1, value=2, step=1, key=f"br_ljudi_{sufiks}")
         if broj_ljudi > 1:
             po_osobi = suma_ukupno / broj_ljudi
-            st.info(f"Po osobi: **{po_osobi:.2f} RSD**")
+            st.info(f"Po osobi: **{f'{po_osobi:.2f}'.replace('.', ',')} RSD**")
             finalni_dugovi["Zajednički"] = po_osobi
             validna_podela = True
 
@@ -105,16 +105,16 @@ with col_desno:
                 br_ucesnika = len(odabrani)
                 fiksna_dostava = v_dostava / br_ucesnika
                 
-                # Ljubičasto polje za dostavu
+                # Ljubičasto polje za dostavu sa zarezom
                 st.markdown(f"""
                     <div style="background-color: #f3e5f5; padding: 10px; border-radius: 5px; border-left: 5px solid #9c27b0; margin-bottom: 20px;">
-                        <span style="color: #4a148c;">Učešće u dostavi: <b>{fiksna_dostava:.2f} RSD</b></span>
+                        <span style="color: #4a148c;">Učešće u dostavi: <b>{f'{fiksna_dostava:.2f}'.replace('.', ',')} RSD</b></span>
                     </div>
                 """, unsafe_allow_html=True)
                 
                 trenutna_suma = 0.0
                 for o in odabrani:
-                    dug = st.number_input(f"Iznos za {o}:", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"rucni_{o}_{sufiks}")
+                    dug = st.number_input(f"Iznos za {o}:", min_value=0.0, step=10.0, value=None, placeholder="0,00", key=f"rucni_{o}_{sufiks}")
                     v_dug = dug if dug is not None else 0.0
                     finalni_dugovi[o] = v_dug
                     trenutna_suma += v_dug
@@ -123,9 +123,9 @@ with col_desno:
                 if abs(ostatak) < 0.01:
                     validna_podela = True
                 elif ostatak > 0:
-                    st.warning(f"Preostalo: **{ostatak:.2f} RSD**")
+                    st.warning(f"Preostalo: **{f'{ostatak:.2f}'.replace('.', ',')} RSD**")
                 else:
-                    st.error(f"Višak: **{abs(ostatak):.2f} RSD**")
+                    st.error(f"Višak: **{f'{abs(ostatak):.2f}'.replace('.', ',')} RSD**")
             
             if st.button("Obriši celu listu"):
                 st.session_state.clanovi_univerzalni = []
@@ -149,7 +149,7 @@ if validna_podela and suma_ukupno > 0:
                 qr_img.save(buf, format="PNG")
                 _, col_qr, _ = st.columns([1, 1, 1])
                 with col_qr:
-                    st.image(buf.getvalue(), caption=f"Iznos: {finalni_dugovi['Zajednički']:.2f} RSD", use_container_width=True)
+                    st.image(buf.getvalue(), caption=f"Iznos: {f'{finalni_dugovi['Zajednički']:.2f}'.replace('.', ',')} RSD", use_container_width=True)
             else:
                 qr_cols = st.columns(5)
                 for i, (ime, dug) in enumerate(finalni_dugovi.items()):
@@ -162,7 +162,7 @@ if validna_podela and suma_ukupno > 0:
                         with qr_cols[i % 5]:
                             st.markdown(f"**{ime}**")
                             st.image(buf.getvalue(), width=130)
-                            st.caption(f"{dug:.2f} RSD")
+                            st.caption(f"{f'{dug:.2f}'.replace('.', ',')} RSD")
 
 st.write("") 
 
