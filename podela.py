@@ -86,6 +86,7 @@ with col_desno:
             if ime:
                 if ime not in st.session_state.clanovi_univerzalni:
                     st.session_state.clanovi_univerzalni.append(ime)
+                
                 kljuc_multi = f"ucesnici_{sufiks}"
                 trenutno_selektovani = list(st.session_state.get(kljuc_multi, []))
                 if ime not in trenutno_selektovani:
@@ -100,15 +101,14 @@ with col_desno:
         if sortirani:
             odabrani = st.multiselect("Ko učestvuje:", options=sortirani, key=f"ucesnici_{sufiks}")
             
-        if odabrani:
-                # PRORAČUN FIKSNOG UČEŠĆA U DOSTAVI
+            if odabrani:
                 br_ucesnika = len(odabrani)
                 fiksna_dostava = v_dostava / br_ucesnika
                 
-                # DODATA POZADINSKA BOJA (Bledo ljubičasta)
+                # Ljubičasto polje za dostavu
                 st.markdown(f"""
                     <div style="background-color: #f3e5f5; padding: 10px; border-radius: 5px; border-left: 5px solid #9c27b0; margin-bottom: 20px;">
-                        <span style="color: #4a148c;">Učešće u dostavi: <b>{fiksna_dostava:.2f} RSD</b></span>
+                        <span style="color: #4a148c; font-family: sans-serif;">Učešće u dostavi: <b>{fiksna_dostava:.2f} RSD</b></span>
                     </div>
                 """, unsafe_allow_html=True)
                 
@@ -165,6 +165,9 @@ if validna_podela and suma_ukupno > 0:
                             st.caption(f"{dug:.2f} RSD")
 
 st.write("") 
+
 st.divider() 
+
 st.caption("**Napomena:** Aplikacija je namenjena isključivo za plaćanja u okviru **IPS sistema Narodne banke Srbije**. Pre potvrde plaćanja, obavezno **proverite ispravnost podataka**. Autor ne snosi odgovornost za pogrešne uplate.")
-st.caption("**Disclaimer:** This app is designed solely for **Serbian IPS payments**. Please verify all details before confirming. The author is not responsible for any incorrect payments.")   
+
+st.caption("**Disclaimer:** This app is designed solely for **Serbian IPS payments**. Please verify all details before confirming. The author is not responsible for any incorrect payments.")
