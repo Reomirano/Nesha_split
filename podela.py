@@ -13,6 +13,8 @@ st.set_page_config(page_title="Podela troškova", layout="wide")
 
 if "reset_kljuc" not in st.session_state:
     st.session_state.reset_kljuc = 0
+if 'clanovi_univerzalni' not in st.session_state:
+    st.session_state.clanovi_univerzalni = []
 
 # --- SIDEBAR: PODACI ---
 st.sidebar.markdown("*<span style='font-size: 0.8rem; color: gray;'>powered by Reomirano</span>*", unsafe_allow_html=True)
@@ -48,9 +50,10 @@ with col_levo:
 with col_desno:
     if st.button("🔄 Novi unos / Reset", use_container_width=True, type="primary"):
         st.session_state.reset_kljuc += 1
-        # Čistimo i listu učesnika pri totalnom resetu
-        if 'clanovi_univerzalni' in st.session_state:
-            st.session_state.clanovi_univerzalni = []
+        st.session_state.clanovi_univerzalni = []
+        # Čišćenje ključa multiselect-a
+        if f"ucesnici_{sufiks}" in st.session_state:
+            del st.session_state[f"ucesnici_{sufiks}"]
         st.rerun()
     
     st.subheader("✍️ Podaci")
@@ -79,23 +82,28 @@ with col_desno:
             validna_podela = True
 
     else:
-        if 'clanovi_univerzalni' not in st.session_state:
-            st.session_state.clanovi_univerzalni = []
+        # IMPLEMENTACIJA AUTOMATSKOG DODAVANJA I SELEKCIJE
+        def dodaj_direktno():
+            ime = st.session_state.novo_ime_input.strip()
+            if ime:
+                if ime not in st.session_state.clanovi_univerzalni:
+                    st.session_state.clanovi_univerzalni.append(ime)
+                
+                # Forsiranje selekcije u multiselect-u
+                kljuc_multi = f"ucesnici_{sufiks}"
+                trenutno_selektovani = list(st.session_state.get(kljuc_multi, []))
+                if ime not in trenutno_selektovani:
+                    trenutno_selektovani.append(ime)
+                    st.session_state[kljuc_multi] = trenutno_selektovani
+            
+            st.session_state.novo_ime_input = ""
 
-        # AUTOMATSKO DODAVANJE
-        def dodaj_i_cekiraj():
-            ime = st.session_state.novo_ime_tmp.strip()
-            if ime and ime not in st.session_state.clanovi_univerzalni:
-                st.session_state.clanovi_univerzalni.append(ime)
-            st.session_state.novo_ime_tmp = ""
-
-        st.text_input("Dodaj kolegu na listu (Enter dodaje i bira):", key="novo_ime_tmp", on_change=dodaj_i_cekiraj)
+        st.text_input("Dodaj kolegu na listu (Enter dodaje i bira):", key="novo_ime_input", on_change=dodaj_direktno)
         
         sortirani = sorted(st.session_state.clanovi_univerzalni)
         
         if sortirani:
-            # default=sortirani znači da su svi automatski štiklirani čim se dodaju
-            odabrani = st.multiselect("Ko učestvuje:", options=sortirani, default=sortirani, key=f"ucesnici_{sufiks}")
+            odabrani = st.multiselect("Ko učestvuje:", options=sortirani, key=f"ucesnici_{sufiks}")
             
             if odabrani:
                 trenutna_suma = 0.0
@@ -107,7 +115,6 @@ with col_desno:
                 
                 ostatak = suma_ukupno - trenutna_suma
                 if abs(ostatak) < 0.01:
-                    st.success("✅ Račun je tačno podeljen!")
                     validna_podela = True
                 elif ostatak > 0:
                     st.warning(f"Preostalo: **{ostatak:.2f} RSD**")
@@ -116,6 +123,8 @@ with col_desno:
             
             if st.button("Obriši celu listu"):
                 st.session_state.clanovi_univerzalni = []
+                if f"ucesnici_{sufiks}" in st.session_state:
+                    st.session_state[f"ucesnici_{sufiks}"] = []
                 st.rerun()
 
 # --- QR SEKCIJA ---
