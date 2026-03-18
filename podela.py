@@ -15,17 +15,26 @@ st.set_page_config(page_title="Podela troškova", layout="wide")
 if "reset_kljuc" not in st.session_state:
     st.session_state.reset_kljuc = 0
 
-# --- SIDEBAR: TVOJA PODEŠAVANJA (VRAĆENO NA ORIGINAL) ---
+# --- SIDEBAR: PODACI ---
 st.sidebar.markdown("*<span style='font-size: 0.8rem; color: gray;'>powered by Reomirano</span>*", unsafe_allow_html=True)
 st.sidebar.header("⚙️ Tvoja podešavanja")
-st.sidebar.info("Ovi podaci se koriste za generisanje QR koda kako bi novac bio uplaćen na ispravan račun.")
-
 moje_ime = st.sidebar.text_input("Administrator:", value="", key="user_name", placeholder="Ime i prezime vlasnika računa")
 moj_racun = st.sidebar.text_input("Broj računa administratora:", value="", key="user_bank", placeholder="18-ocifreni broj tekućeg računa")
 
 # --- GLAVNI PANEL ---
 st.title("💰 Podela troškova")
-st.caption(f"Novac se uplaćuje na ime: **{moje_ime}** | Račun: **{moj_racun}**")
+
+# VRAĆENO UPUTSTVO
+with st.expander("📖 Kako ovo radi?"):
+    st.write("""
+    1. **Unesi svoj račun:** U levom meniju unesi svoje ime i broj računa.
+    2. **Unesi iznose:** Upiši vrednost sa računa i cenu dostave.
+    3. **Odaberi metodu:** * **Ravnopravno:** Unesi broj ljudi i dobijaš univerzalni QR kod.
+        * **Ručni unos:** Dodaš imena kolega i uneseš pojedinačnu vrednost.
+    4. **Skeniranje:** Kolege otvore mBanking, izaberu 'IPS' i očitaju kod sa ekrana.
+    """)
+
+st.caption(f"Novac leže na: **{moje_ime}** | Račun: **{moj_racun}**")
 st.divider()
 
 sufiks = st.session_state.reset_kljuc
@@ -43,11 +52,9 @@ with col_desno:
         st.rerun()
     
     st.subheader("✍️ Podaci")
-    col_iznos, col_dostava = st.columns(2)
-    
-    # REŠEN TYPEERROR: Provera da li je uneta vrednost ili None
-    iznos_racuna = col_iznos.number_input("Iznos sa računa (RSD):", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"racun_{sufiks}")
-    dostava = col_dostava.number_input("Dostava (RSD):", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"dostava_{sufiks}")
+    c1, c2 = st.columns(2)
+    iznos_racuna = c1.number_input("Iznos sa računa (RSD):", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"racun_{sufiks}")
+    dostava = c2.number_input("Dostava (RSD):", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"dostava_{sufiks}")
 
     v_racun = iznos_racuna if iznos_racuna is not None else 0.0
     v_dostava = dostava if dostava is not None else 0.0
@@ -61,57 +68,63 @@ with col_desno:
     finalni_dugovi = {}
     validna_podela = False
 
-    # --- MASKA 1: RAVNOPRAVNO ---
     if nacin == "Ravnopravno":
-        broj_ljudi = st.number_input("Na koliko osoba delimo (i ti)?", min_value=1, value=2, step=1, key=f"br_ljudi_{sufiks}")
+        broj_ljudi = st.number_input("Ukupan broj osoba (uključujući i tebe):", min_value=1, value=2, step=1, key=f"br_ljudi_{sufiks}")
         if broj_ljudi > 1:
             po_osobi = suma_ukupno / broj_ljudi
-            st.info(f"Svaka osoba ti duguje: **{po_osobi:.2f} RSD**")
+            st.info(f"Po osobi: **{po_osobi:.2f} RSD**")
             finalni_dugovi["Zajednički"] = po_osobi
             validna_podela = True
 
-    # --- MASKA 2: RUČNI UNOS ---
     else:
         if 'clanovi_univerzalni' not in st.session_state:
             st.session_state.clanovi_univerzalni = []
 
         def dodaj_clana():
-            ime = st.session_state.novo_ime_temp.strip()
+            ime = st.session_state.novo_ime_tmp.strip()
             if ime and ime not in st.session_state.clanovi_univerzalni:
                 st.session_state.clanovi_univerzalni.append(ime)
-            st.session_state.novo_ime_temp = ""
+            st.session_state.novo_ime_tmp = ""
 
-        st.text_input("Dodaj kolegu na listu:", key="novo_ime_temp", on_change=dodaj_clana, placeholder="Upiši ime i pritisni Enter")
+        st.text_input("Dodaj kolegu na listu:", key="novo_ime_tmp", on_change=dodaj_clana, placeholder="Ime + Enter")
         
         sortirani = sorted(st.session_state.clanovi_univerzalni)
-        odabrani = st.multiselect("Ko učestvuje u ovom trošku:", options=sortirani, key=f"ucesnici_{sufiks}")
         
-        if odabrani:
-            trenutna_suma = 0.0
-            for o in odabrani:
-                dug = st.number_input(f"Iznos za {o}:", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"rucni_{o}_{sufiks}")
-                v_dug = dug if dug is not None else 0.0
-                finalni_dugovi[o] = v_dug
-                trenutna_suma += v_dug
+        if sortirani:
+            odaberi_sve = st.checkbox("Odaberi sve učesnike", key=f"all_{sufiks}")
+            podrazumevani = sortirani if odaberi_sve else []
             
-            ostatak = suma_ukupno - trenutna_suma
-            if abs(ostatak) < 0.01:
-                st.success("✅ Račun je potpuno raspodeljen!")
-                validna_podela = True
-            elif ostatak > 0:
-                st.warning(f"Preostalo za raspodelu: **{ostatak:.2f} RSD**")
-            else:
-                st.error(f"Prešišali ste ukupan iznos za: **{abs(ostatak):.2f} RSD**")
+            odabrani = st.multiselect("Ko učestvuje:", options=sortirani, default=podrazumevani, key=f"ucesnici_{sufiks}")
+            
+            if odabrani:
+                trenutna_suma = 0.0
+                for o in odabrani:
+                    dug = st.number_input(f"Iznos za {o}:", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"rucni_{o}_{sufiks}")
+                    v_dug = dug if dug is not None else 0.0
+                    finalni_dugovi[o] = v_dug
+                    trenutna_suma += v_dug
+                
+                ostatak = suma_ukupno - trenutna_suma
+                if abs(ostatak) < 0.01:
+                    st.success("✅ Račun je tačno podeljen!")
+                    validna_podela = True
+                elif ostatak > 0:
+                    st.warning(f"Preostalo: **{ostatak:.2f} RSD**")
+                else:
+                    st.error(f"Višak: **{abs(ostatak):.2f} RSD**")
+            
+            if st.button("Obriši listu kolega"):
+                st.session_state.clanovi_univerzalni = []
+                st.rerun()
 
 # --- QR SEKCIJA ---
 st.divider()
 if validna_podela and suma_ukupno > 0:
     if st.button("🔥 GENERIŠI QR KODOVE", use_container_width=True, type="primary"):
         if not moje_ime or not moj_racun:
-            st.error("⚠️ Popuni svoje podatke u sidebar-u (levo)!")
+            st.error("⚠️ Popuni podatke u sidebar-u!")
         else:
             c_racun = ocisti_racun(moj_racun)
-            
             if nacin == "Ravnopravno":
                 iz_fmt = "{:.2f}".format(finalni_dugovi["Zajednički"]).replace('.', ',')
                 ips_data = f"K:PR|V:01|C:1|R:{c_racun}|N:{moje_ime}|I:RSD{iz_fmt}|SF:289|S:Podela racuna"
