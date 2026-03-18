@@ -105,7 +105,6 @@ with col_desno:
                 br_ucesnika = len(odabrani)
                 fiksna_dostava = v_dostava / br_ucesnika
                 
-                # Ljubičasto polje za dostavu sa zarezom
                 st.markdown(f"""
                     <div style="background-color: #f3e5f5; padding: 10px; border-radius: 5px; border-left: 5px solid #9c27b0; margin-bottom: 20px;">
                         <span style="color: #4a148c;">Učešće u dostavi: <b>{f'{fiksna_dostava:.2f}'.replace('.', ',')} RSD</b></span>
@@ -127,11 +126,14 @@ with col_desno:
                 else:
                     st.error(f"Višak: **{f'{abs(ostatak):.2f}'.replace('.', ',')} RSD**")
             
-            if st.button("Obriši celu listu"):
+            # Rešenje za grešku: Upotreba callback funkcije
+            def obrisi_listu_callback():
                 st.session_state.clanovi_univerzalni = []
-                if f"ucesnici_{sufiks}" in st.session_state:
-                    st.session_state[f"ucesnici_{sufiks}"] = []
-                st.rerun()
+                kljuc_multi = f"ucesnici_{sufiks}"
+                if kljuc_multi in st.session_state:
+                    del st.session_state[kljuc_multi]
+
+            st.button("Obriši celu listu", on_click=obrisi_listu_callback)
 
 # --- QR SEKCIJA ---
 st.divider()
