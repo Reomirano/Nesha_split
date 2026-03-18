@@ -48,7 +48,7 @@ with col_levo:
         st.image(fajl, use_container_width=True)
 
 with col_desno:
-    if st.button("🔄 Novi unos / Reset", use_container_width=True, type="primary"):
+    if st.button("🔄 Novi unos", use_container_width=True, type="primary"):
         st.session_state.reset_kljuc += 1
         st.session_state.clanovi_univerzalni = []
         if f"ucesnici_{sufiks}" in st.session_state:
@@ -108,7 +108,7 @@ with col_desno:
                 # Ljubičasto polje za dostavu
                 st.markdown(f"""
                     <div style="background-color: #f3e5f5; padding: 10px; border-radius: 5px; border-left: 5px solid #9c27b0; margin-bottom: 20px;">
-                        <span style="color: #4a148c; font-family: sans-serif;">Učešće u dostavi: <b>{fiksna_dostava:.2f} RSD</b></span>
+                        <span style="color: #4a148c;">Učešće u dostavi: <b>{fiksna_dostava:.2f} RSD</b></span>
                     </div>
                 """, unsafe_allow_html=True)
                 
@@ -169,5 +169,4 @@ st.write("")
 st.divider() 
 
 st.caption("**Napomena:** Aplikacija je namenjena isključivo za plaćanja u okviru **IPS sistema Narodne banke Srbije**. Pre potvrde plaćanja, obavezno **proverite ispravnost podataka**. Autor ne snosi odgovornost za pogrešne uplate.")
-
 st.caption("**Disclaimer:** This app is designed solely for **Serbian IPS payments**. Please verify all details before confirming. The author is not responsible for any incorrect payments.")
