@@ -10,33 +10,20 @@ def ocisti_racun(racun):
 
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Podela troškova", layout="wide")
-with st.expander("📖 Kako ovo radi?"):
-    st.write("""
-    1. **Unesi svoj račun:** Prvo unesi svoje ime i broj tekućeg računa.
-    2. **Dodaj učesnike:** Upiši imena učesnika.
-    3. **Ukucaj iznose:** Unesi vrednosti sa računa i cenu dostave.
-    4. **Odaberi način podele:** Odaberi da li delite račun na ravne časti ili svako plaća svoj ceh.
-    4. **Skeniranje:** Otvorite svoje mBanking aplikacije, odaberite 'IPS Skeniraj' i skenirajte sa ekrana ili pošalji skrinšotove za naplatu.
-    
-    *Vaši podaci se ne čuvaju na serveru i vidljivi su samo vama.*
-    """)
 
 # KLJUČ ZA RESET
 if "reset_kljuc" not in st.session_state:
     st.session_state.reset_kljuc = 0
 
 # --- SIDEBAR: PODEŠAVANJA ---
-# MALI DISKRETNI POTPIS (ITALLIC I SVEDEN)
 st.sidebar.markdown("*<span style='font-size: 0.8rem; color: gray;'>powered by Reomirano</span>*", unsafe_allow_html=True)
+st.sidebar.header("⚙️ Podešavanja administratora")
 
-st.sidebar.header("⚙️ Tvoja podešavanja")
-st.sidebar.info("Ovi podaci se koriste za generisanje QR koda kako bi novac bio uplaćen na ispravan račun.")
-
-moje_ime = st.sidebar.text_input("Administrator:", value="", key="user_name", placeholder="ime i prezime vlasnika računa")
-moj_racun = st.sidebar.text_input("Broj računa administratora:", value="", key="user_bank", placeholder="18-ocifreni broj tekućeg računa")
+moje_ime = st.sidebar.text_input("Ime i prezime primaoca:", value="", key="user_name")
+moj_racun = st.sidebar.text_input("Broj računa (18 cifara):", value="", key="user_bank")
 
 st.sidebar.divider()
-st.sidebar.header("👥 Tvoje kolege")
+st.sidebar.header("👥 Baza kolega")
 
 if 'clanovi_univerzalni' not in st.session_state:
     st.session_state.clanovi_univerzalni = []
@@ -47,9 +34,9 @@ def dodaj_clana():
         st.session_state.clanovi_univerzalni.append(ime)
     st.session_state.novo_ime_input = ""
 
-st.sidebar.text_input("Dodaj člana:", key="novo_ime_input", on_change=dodaj_clana)
+st.sidebar.text_input("Dodaj kolegu u bazu:", key="novo_ime_input", on_change=dodaj_clana)
 
-if st.sidebar.button("Obriši sve članove"):
+if st.sidebar.button("Obriši celu bazu"):
     st.session_state.clanovi_univerzalni = []
     st.rerun()
 
@@ -63,91 +50,101 @@ for ime in sortirani_clanovi:
 
 # --- GLAVNI PANEL ---
 st.title("💰 Podela troškova")
-st.caption(f"Novac se uplaćuje na ime: **{moje_ime}** | Račun: **{moj_racun}**")
+st.caption(f"Primalac: **{moje_ime if moje_ime else '---'}** | Račun: **{moj_racun if moj_racun else '---'}**")
 st.divider()
 
 sufiks = st.session_state.reset_kljuc
-col_levo, col_desno = st.columns([1, 1])
+col_levo, col_desno = st.columns([1, 1.2])
 
 with col_levo:
-    st.subheader("📸 Račun")
-    fajl = st.file_uploader("Otpremi dokument", type=['jpg', 'jpeg', 'png'], key=f"fajl_{sufiks}")
+    st.subheader("📸 Slika računa")
+    fajl = st.file_uploader("Otpremi račun", type=['jpg', 'jpeg', 'png'], key=f"fajl_{sufiks}")
     if fajl:
         st.image(fajl, use_container_width=True)
 
 with col_desno:
-    if st.button("🔄 Novi unos", use_container_width=True, type="primary"):
+    if st.button("🔄 Očisti sve unose", use_container_width=True):
         st.session_state.reset_kljuc += 1
         st.rerun()
     
-    st.subheader("✍️ Podaci")
-    col_iznos, col_dostava = st.columns(2)
-    with col_iznos:
-        iznos_racuna = st.number_input("Iznos sa računa (RSD):", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"racun_{sufiks}")
-    with col_dostava:
-        dostava = st.number_input("Dostava (RSD):", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"dostava_{sufiks}")
+    st.subheader("✍️ Finansije")
+    c1, c2 = st.columns(2)
+    iznos_racuna = c1.number_input("Iznos (RSD):", min_value=0.0, step=50.0, value=0.0, key=f"racun_{sufiks}")
+    dostava = c2.number_input("Dostava (RSD):", min_value=0.0, step=10.0, value=0.0, key=f"dostava_{sufiks}")
 
-    v_racun = iznos_racuna if iznos_racuna is not None else 0.0
-    v_dostava = dostava if dostava is not None else 0.0
-    suma_ukupno = v_racun + v_dostava
+    ukupno = iznos_racuna + dostava
+    st.markdown(f"### Ukupno za naplatu: {ukupno:.2f} RSD")
+    st.divider()
 
-    st.markdown(f"### Ukupno: {suma_ukupno:.2f} RSD")
-
-    def promenuo_sve():
-        check_kljuc = f"sve_{sufiks}"
-        multi_kljuc = f"ucesnici_{sufiks}"
-        if st.session_state[check_kljuc]:
-            st.session_state[multi_kljuc] = sortirani_clanovi
-        else:
-            st.session_state[multi_kljuc] = []
-
-    st.checkbox("Odaberi sve učesnike", key=f"sve_{sufiks}", on_change=promenuo_sve)
-    
-    odabrani = st.multiselect("Ko učestvuje:", options=sortirani_clanovi, key=f"ucesnici_{sufiks}")
-    nacin = st.radio("Metoda:", ["Ravnopravno", "Ručni unos"], horizontal=True, key=f"nacin_{sufiks}")
+    nacin = st.radio("Kako delimo?", ["Ravnopravno (Svi isto)", "Ručni unos (Svako svoje)"], horizontal=True, key=f"nacin_{sufiks}")
 
     finalni_dugovi = {}
-    if odabrani:
-        if nacin == "Ravnopravno":
-            po_osobi = suma_ukupno / len(odabrani) if len(odabrani) > 0 else 0
-            st.info(f"Po osobi: **{po_osobi:.2f} RSD**")
-            for o in odabrani:
-                finalni_dugovi[o] = po_osobi
-        else:
-            for o in odabrani:
-                finalni_dugovi[o] = st.number_input(
-                    f"Iznos za člana {o}:", 
-                    min_value=0.0, 
-                    key=f"rucni_{o}_{sufiks}", 
-                    value=None, 
-                    placeholder="0.00"
-                )
+    validna_podela = False
 
-st.divider()
+    if nacin == "Ravnopravno (Svi isto)":
+        broj_ljudi = st.number_input("Na koliko osoba delimo? (uključujući i tebe)", min_value=1, value=2, step=1)
+        po_osobi = ukupno / broj_ljudi if broj_ljudi > 0 else 0
+        st.info(f"Svaka osoba (osim tebe) treba da uplati: **{po_osobi:.2f} RSD**")
+        
+        # Generišemo jedan virtuelni unos za "Zajednički QR"
+        if po_osobi > 0:
+            finalni_dugovi["Zajednički kod"] = po_osobi
+            validna_podela = True
+
+    else:
+        odabrani = st.multiselect("Ko učestvuje u ovom računu:", options=sortirani_clanovi, key=f"ucesnici_{sufiks}")
+        if odabrani:
+            st.write("Unesi iznose za kolege:")
+            trenutna_suma = 0.0
+            for o in odabrani:
+                dug = st.number_input(f"Iznos za {o}:", min_value=0.0, step=10.0, value=0.0, key=f"rucni_{o}_{sufiks}")
+                finalni_dugovi[o] = dug
+                trenutna_suma += dug
+            
+            ostatak = ukupno - trenutna_suma
+            
+            if ostatak > 0.01:
+                st.warning(f"⚠️ Preostalo za raspodelu: **{ostatak:.2f} RSD**")
+            elif ostatak < -0.01:
+                st.error(f"❌ Prebacili ste iznos za: **{abs(ostatak):.2f} RSD**")
+            else:
+                st.success("✅ Račun je tačno raspodeljen!")
+                validna_podela = True
 
 # --- QR SEKCIJA ---
-if odabrani:
+st.divider()
+if validna_podela:
     if st.button("🔥 GENERIŠI QR KODOVE", use_container_width=True, type="primary"):
         if not moje_ime or not moj_racun:
-            st.error("⚠️ Popunite svoje podatke u sidebar-u (levo)!")
-        elif nacin == "Ručni unos" and any(v is None for v in finalni_dugovi.values()):
-            st.error("⚠️ Niste uneli iznose za sve odabrane članove!")
+            st.error("⚠️ Unesi svoje podatke u sidebar-u (levo) pre generisanja!")
         else:
             c_racun = ocisti_racun(moj_racun)
-            qr_cols = st.columns(6)
-            for i, (ime, dug) in enumerate(finalni_dugovi.items()):
-                if dug > 0:
-                    iz_fmt = "{:.2f}".format(dug).replace('.', ',')
-                    ips_data = f"K:PR|V:01|C:1|R:{c_racun}|N:{moje_ime}|I:RSD{iz_fmt}|SF:289|S:Rucak-{ime}"
-                    qr_img = qrcode.make(ips_data)
-                    buf = BytesIO()
-                    qr_img.save(buf, format="PNG")
-                    with qr_cols[i % 6]: # Mora biti isti broj kao gore u columns
-                        st.markdown(f"**{ime}**")
-                        # SMANJILI SMO WIDTH SA 160 NA 120 DA BI STALI
-                        st.image(buf.getvalue(), width=120) 
-                        st.caption(f"{dug:.2f} RSD")
-st.write("") 
-st.divider() 
-st.caption("**Napomena:** Aplikacija je namenjena isključivo za plaćanja u okviru **IPS sistema Narodne banke Srbije**. Pre potvrde plaćanja, obavezno **proverite ispravnost podataka**. Autor ne snosi odgovornost za pogrešne uplate.")
-st.caption("**Disclaimer:** This app is designed solely for **Serbian IPS payments**. Please verify all details before confirming. The author is not responsible for any incorrect payments.")                        
+            
+            if nacin == "Ravnopravno (Svi isto)":
+                # Prikazujemo jedan veliki centralni QR kod
+                dug = finalni_dugovi["Zajednički kod"]
+                iz_fmt = "{:.2f}".format(dug).replace('.', ',')
+                ips_data = f"K:PR|V:01|C:1|R:{c_racun}|N:{moje_ime}|I:RSD{iz_fmt}|SF:289|S:Podela racuna"
+                qr_img = qrcode.make(ips_data)
+                buf = BytesIO()
+                qr_img.save(buf, format="PNG")
+                
+                col_c1, col_c2, col_c3 = st.columns([1, 1, 1])
+                with col_c2:
+                    st.image(buf.getvalue(), caption=f"Iznos: {dug:.2f} RSD", use_container_width=True)
+            else:
+                # Prikazujemo male kodove u kolonama
+                qr_cols = st.columns(5)
+                for i, (ime, dug) in enumerate(finalni_dugovi.items()):
+                    if dug > 0:
+                        iz_fmt = "{:.2f}".format(dug).replace('.', ',')
+                        ips_data = f"K:PR|V:01|C:1|R:{c_racun}|N:{moje_ime}|I:RSD{iz_fmt}|SF:289|S:Rucak-{ime}"
+                        qr_img = qrcode.make(ips_data)
+                        buf = BytesIO()
+                        qr_img.save(buf, format="PNG")
+                        with qr_cols[i % 5]:
+                            st.markdown(f"**{ime}**")
+                            st.image(buf.getvalue(), width=140)
+                            st.caption(f"{dug:.2f} RSD")
+
+st.caption("<br><br>Ovaj alat generiše kodove za mBanking (NBS IPS). Proverite podatke pre uplate.", unsafe_allow_html=True)
