@@ -114,7 +114,7 @@ with col_desno:
                 
                 trenutna_suma = 0.0
                 for o in odabrani:
-                    dug = st.number_input(f"Iznos za {o}:", min_value=0.0, step=10.0, value=None, placeholder="0,00", key=f"rucni_{o}_{sufiks}")
+                    dug = st.number_input(f"Iznos za učesnika {o}:", min_value=0.0, step=10.0, value=None, placeholder="0,00", key=f"rucni_{o}_{sufiks}")
                     v_dug = dug if dug is not None else 0.0
                     finalni_dugovi[o] = v_dug
                     trenutna_suma += v_dug
