@@ -51,7 +51,6 @@ with col_desno:
     if st.button("🔄 Novi unos / Reset", use_container_width=True, type="primary"):
         st.session_state.reset_kljuc += 1
         st.session_state.clanovi_univerzalni = []
-        # Čišćenje ključa multiselect-a
         if f"ucesnici_{sufiks}" in st.session_state:
             del st.session_state[f"ucesnici_{sufiks}"]
         st.rerun()
@@ -82,20 +81,16 @@ with col_desno:
             validna_podela = True
 
     else:
-        # IMPLEMENTACIJA AUTOMATSKOG DODAVANJA I SELEKCIJE
         def dodaj_direktno():
             ime = st.session_state.novo_ime_input.strip()
             if ime:
                 if ime not in st.session_state.clanovi_univerzalni:
                     st.session_state.clanovi_univerzalni.append(ime)
-                
-                # Forsiranje selekcije u multiselect-u
                 kljuc_multi = f"ucesnici_{sufiks}"
                 trenutno_selektovani = list(st.session_state.get(kljuc_multi, []))
                 if ime not in trenutno_selektovani:
                     trenutno_selektovani.append(ime)
                     st.session_state[kljuc_multi] = trenutno_selektovani
-            
             st.session_state.novo_ime_input = ""
 
         st.text_input("Dodaj kolegu na listu (Enter dodaje i bira):", key="novo_ime_input", on_change=dodaj_direktno)
@@ -106,6 +101,11 @@ with col_desno:
             odabrani = st.multiselect("Ko učestvuje:", options=sortirani, key=f"ucesnici_{sufiks}")
             
             if odabrani:
+                # PRORAČUN FIKSNOG UČEŠĆA U DOSTAVI
+                br_ucesnika = len(odabrani)
+                fiksna_dostava = v_dostava / br_ucesnika
+                st.write(f"Učešće u dostavi: **{fiksna_dostava:.2f} RSD**")
+                
                 trenutna_suma = 0.0
                 for o in odabrani:
                     dug = st.number_input(f"Iznos za {o}:", min_value=0.0, step=10.0, value=None, placeholder="0.00", key=f"rucni_{o}_{sufiks}")
