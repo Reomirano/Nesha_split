@@ -31,8 +31,8 @@ with st.expander("📖 Kako ovo radi?"):
     2. **Unesi iznose:** Upiši vrednost sa računa i cenu dostave.
     3. **Odaberi metodu:**
         * **Ravnopravno:** Unesi broj ljudi i dobijaš univerzalni QR kod.
-        * **Ručni unos:** Dodaš imena kolega i uneseš pojedinačnu vrednost.
-    4. **Skeniranje:** Kolege otvore mBanking, izaberu 'IPS' i očitaju kod sa ekrana.
+        * **Ručni unos:** Dodaš imena učesnika i uneseš pojedinačnu vrednost.
+    4. **Skeniranje:** Svako otvori mBanking, odabere 'IPS' i očita kod sa ekrana (univerzalni ili lični).
     """)
 
 st.caption(f"Novac leže na: **{moje_ime}** | Račun: **{moj_racun}**")
@@ -94,7 +94,7 @@ with col_desno:
                     st.session_state[kljuc_multi] = trenutno_selektovani
             st.session_state.novo_ime_input = ""
 
-        st.text_input("Dodaj kolegu na listu (Enter dodaje i bira):", key="novo_ime_input", on_change=dodaj_direktno)
+        st.text_input("Dodaj učesnika na listu (potvrdi na Enter):", key="novo_ime_input", on_change=dodaj_direktno)
         
         sortirani = sorted(st.session_state.clanovi_univerzalni)
         
