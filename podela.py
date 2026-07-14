@@ -22,6 +22,12 @@ def ocisti_racun(racun):
     # Ako već ima 18 cifara ili je prekratak unos, samo ga vraćamo formatiranog
     return samo_cifre.zfill(18)
 
+def formatiraj_za_prikaz(racun_18_cifara):
+    # Ako račun ima tačno 18 cifara, delimo ga crticama radi lakšeg čitanja (xxx-xxxxxxxxxxxxx-xx)
+    if len(racun_18_cifara) == 18:
+        return f"{racun_18_cifara[:3]}-{racun_18_cifara[3:-2]}-{racun_18_cifara[-2:]}"
+    return racun_18_cifara
+
 # --- KONFIGURACIJA ---
 st.set_page_config(page_title="Podela troškova", layout="wide")
 
@@ -49,9 +55,17 @@ with st.expander("📖 Kako ovo radi?"):
     4. **Skeniranje:** Svako otvori mBanking, odabere 'IPS' i očita kod sa ekrana (univerzalni ili lični).
     """)
 
-# Prikazujemo račun onako kako će stvarno izgledati u IPS kodu radi provere
-prikaz_racuna = ocisti_racun(moj_racun) if moj_racun else "Nije unet"
-st.markdown(f"### 🏦 Ime primaoca: **{moje_ime if moje_ime else '...'}** | Račun primaoca: **{prikaz_racuna}**")
+# Priprema računa za pozadinu (18 cifara) i za ekran (sa crticama)
+c_racun = ocisti_racun(moj_racun) if moj_racun else ""
+prikaz_racuna = formatiraj_za_prikaz(c_racun) if c_racun else "Nije unet"
+
+# Veliki, pregledan prikaz sa crticama
+st.markdown(f"""
+    <p style="font-size: 1.5rem; font-weight: 500; margin-top: 15px; margin-bottom: 0;">
+        🏦 Ime primaoca: <b>{moje_ime if moje_ime else '...'}</b> | Račun primaoca: <b>{prikaz_racuna}</b>
+    </p>
+""", unsafe_allow_html=True)
+
 st.divider()
 
 sufiks = st.session_state.reset_kljuc
@@ -157,7 +171,6 @@ if validna_podela and suma_ukupno > 0:
         if not moje_ime or not moj_racun:
             st.error("⚠️ Popuni podatke u sidebar-u!")
         else:
-            c_racun = ocisti_racun(moj_racun)
             if nacin == "Ravnopravno":
                 iz_fmt = "{:.2f}".format(finalni_dugovi["Zajednički"]).replace('.', ',')
                 ips_data = f"K:PR|V:01|C:1|R:{c_racun}|N:{moje_ime}|I:RSD{iz_fmt}|SF:289|S:Podela racuna"
