@@ -51,7 +51,7 @@ with st.expander("📖 Kako ovo radi?"):
 
 # Prikazujemo račun onako kako će stvarno izgledati u IPS kodu radi provere
 prikaz_racuna = ocisti_racun(moj_racun) if moj_racun else "Nije unet"
-st.markdown(f"###Primalac uplate: **{moje_ime if moje_ime else '...'}** | Račun primaoca: **{prikaz_racuna}**")
+st.markdown(f"### 🏦 Ime primaoca: **{moje_ime if moje_ime else '...'}** | Račun primaoca: **{prikaz_racuna}**")
 st.divider()
 
 sufiks = st.session_state.reset_kljuc
