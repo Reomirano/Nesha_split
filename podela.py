@@ -5,7 +5,21 @@ import re
 
 # --- FUNKCIJE ---
 def ocisti_racun(racun):
+    # Uklanjamo sve što nisu cifre (razmake, crtice, itd.)
     samo_cifre = re.sub(r'\D', '', racun)
+    
+    # NBS standard: 3 cifre banka + 13 cifara partija + 2 cifre kontrolni broj = 18 cifara
+    if 5 < len(samo_cifre) < 18:
+        kod_banke = samo_cifre[:3]          # Prve 3 cifre
+        kontrolni_broj = samo_cifre[-2:]     # Poslednje 2 cifre
+        partija_racuna = samo_cifre[3:-2]    # Sve između
+        
+        # Dopunjavamo srednji deo (partiju) vodećim nulama do 13 cifara
+        partija_sa_nulama = partija_racuna.zfill(13)
+        
+        return f"{kod_banke}{partija_sa_nulama}{kontrolni_broj}"
+    
+    # Ako već ima 18 cifara ili je prekratak unos, samo ga vraćamo formatiranog
     return samo_cifre.zfill(18)
 
 # --- KONFIGURACIJA ---
@@ -20,14 +34,14 @@ if 'clanovi_univerzalni' not in st.session_state:
 st.sidebar.markdown("*<span style='font-size: 0.8rem; color: gray;'>powered by Reomirano</span>*", unsafe_allow_html=True)
 st.sidebar.header("⚙️ Tvoja podešavanja")
 moje_ime = st.sidebar.text_input("Administrator:", value="", key="user_name", placeholder="Ime i prezime vlasnika računa")
-moj_racun = st.sidebar.text_input("Broj računa administratora:", value="", key="user_bank", placeholder="18-ocifreni broj tekućeg računa")
+moj_racun = st.sidebar.text_input("Broj računa administratora:", value="", key="user_bank", placeholder="Broj tekućeg računa")
 
 # --- GLAVNI PANEL ---
 st.title("💰 Podela troškova")
 
 with st.expander("📖 Kako ovo radi?"):
     st.write("""
-    1. **Unesi svoj račun:** U levom meniju unesi svoje ime i broj računa.
+    1. **Unesi svoj račun:** U levom meniju unesi svoje ime i broj računa (sistem sam dopunjava nule ako uneseš skraćeni broj sa kartice).
     2. **Unesi iznose:** Upiši vrednost sa računa i cenu dostave.
     3. **Odaberi metodu:**
         * **Ravnopravno:** Unesi broj ljudi i dobijaš univerzalni QR kod.
@@ -35,7 +49,9 @@ with st.expander("📖 Kako ovo radi?"):
     4. **Skeniranje:** Svako otvori mBanking, odabere 'IPS' i očita kod sa ekrana (univerzalni ili lični).
     """)
 
-st.caption(f"Novac leže na: **{moje_ime}** | Račun: **{moj_racun}**")
+# Prikazujemo račun onako kako će stvarno izgledati u IPS kodu radi provere
+prikaz_racuna = ocisti_racun(moj_racun) if moj_racun else "Nije unet"
+st.caption(f"Novac leže na: **{moje_ime if moje_ime else '...'}** | Validiran račun za IPS: **{prikaz_racuna}**")
 st.divider()
 
 sufiks = st.session_state.reset_kljuc
@@ -126,7 +142,6 @@ with col_desno:
                 else:
                     st.error(f"Višak: **{f'{abs(ostatak):.2f}'.replace('.', ',')} RSD**")
             
-            # Rešenje za grešku: Upotreba callback funkcije
             def obrisi_listu_callback():
                 st.session_state.clanovi_univerzalni = []
                 kljuc_multi = f"ucesnici_{sufiks}"
@@ -167,8 +182,6 @@ if validna_podela and suma_ukupno > 0:
                             st.caption(f"{f'{dug:.2f}'.replace('.', ',')} RSD")
 
 st.write("") 
-
 st.divider() 
-
 st.caption("**Napomena:** Aplikacija je namenjena isključivo za plaćanja u okviru **IPS sistema Narodne banke Srbije**. Pre potvrde plaćanja, obavezno **proverite ispravnost podataka**. Autor ne snosi odgovornost za pogrešne uplate.")
 st.caption("**Disclaimer:** This app is designed solely for **Serbian IPS payments**. Please verify all details before confirming. The author is not responsible for any incorrect payments.")
