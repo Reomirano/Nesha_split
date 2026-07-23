@@ -2,6 +2,10 @@ import streamlit as st
 import qrcode
 from io import BytesIO
 import re
+import cv2
+from pyzbar.pyzbar import decode
+import numpy as np
+import requests
 
 # --- FUNKCIJE ---
 def ocisti_racun(racun):
@@ -48,7 +52,7 @@ st.title("💰 Podela troškova")
 with st.expander("📖 Kako ovo radi?"):
     st.write("""
     1. **Unesi svoj račun:** U levom meniju unesi svoje ime i broj računa (sistem sam dopunjava nule ako uneseš skraćeni broj sa kartice).
-    2. **Unesi iznose:** Upiši vrednost sa računa i cenu dostave.
+    2. **Unesi iznose:** Upiši vrednost sa računa i cenu dostave (ili otpremi sliku računa da automatski očita QR kod).
     3. **Odaberi metodu:**
         * **Ravnopravno:** Unesi broj ljudi i dobijaš univerzalni QR kod.
         * **Ručni unos:** Dodaš imena učesnika i uneseš pojedinačnu vrednost.
@@ -74,8 +78,26 @@ col_levo, col_desno = st.columns([1, 1])
 with col_levo:
     st.subheader("📸 Račun")
     fajl = st.file_uploader("Otpremi dokument", type=['jpg', 'jpeg', 'png'], key=f"fajl_{sufiks}")
+    
     if fajl:
         st.image(fajl, use_container_width=True)
+        
+        # --- AUTOMATSKO ČITANJE QR KODA SA SLIKE ---
+        file_bytes = np.asarray(bytearray(fajl.read()), dtype=np.uint8)
+        opencv_image = cv2.imdecode(file_bytes, 1)
+        
+        detektovani_qr = decode(opencv_image)
+        
+        if detektovani_qr:
+            for qr in detektovani_qr:
+                qr_url = qr.data.decode('utf-8')
+                st.success("✔ QR kod uspešno učitan sa računa!")
+                st.session_state[f"qr_url_{sufiks}"] = qr_url
+                
+                with st.expander("Detalji očitanog linka"):
+                    st.write(qr_url)
+        else:
+            st.warning("⚠️ QR kod nije pronađen na slici. Pokušaj ponovo sa jasnijom fotografijom.")
 
 with col_desno:
     if st.button("🔄 Novi unos", use_container_width=True, type="primary"):
@@ -179,7 +201,7 @@ if validna_podela and suma_ukupno > 0:
                 qr_img.save(buf, format="PNG")
                 _, col_qr, _ = st.columns([1, 1, 1])
                 with col_qr:
-                    st.image(buf.getvalue(), caption=f"Iznos: {f'{finalni_dugovi['Zajednički']:.2f}'.replace('.', ',')} RSD", use_container_width=True)
+                    st.image(buf.getvalue(), caption=f"Iznos: {f'{finalni_dugovi[\"Zajednički\"]:.2f}'.replace('.', ',')} RSD", use_container_width=True)
             else:
                 qr_cols = st.columns(5)
                 for i, (ime, dug) in enumerate(finalni_dugovi.items()):
