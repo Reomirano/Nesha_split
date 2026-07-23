@@ -2,21 +2,28 @@ import streamlit as st
 import qrcode
 from io import BytesIO
 import re
-import cv2
-import numpy as np
 
 # --- FUNKCIJE ---
 def ocisti_racun(racun):
+    # Uklanjamo sve što nisu cifre (razmake, crtice, itd.)
     samo_cifre = re.sub(r'\D', '', racun)
+    
+    # NBS standard: 3 cifre banka + 13 cifara partija + 2 cifre kontrolni broj = 18 cifara
     if 5 < len(samo_cifre) < 18:
-        kod_banke = samo_cifre[:3]          
-        kontrolni_broj = samo_cifre[-2:]     
-        partija_racuna = samo_cifre[3:-2]    
+        kod_banke = samo_cifre[:3]          # Prve 3 cifre
+        kontrolni_broj = samo_cifre[-2:]     # Poslednje 2 cifre
+        partija_racuna = samo_cifre[3:-2]    # Sve između
+        
+        # Dopunjavamo srednji deo (partiju) vodećim nulama do 13 cifara
         partija_sa_nulama = partija_racuna.zfill(13)
+        
         return f"{kod_banke}{partija_sa_nulama}{kontrolni_broj}"
+    
+    # Ako već ima 18 cifara ili je prekratak unos, samo ga vraćamo formatiranog
     return samo_cifre.zfill(18)
 
 def formatiraj_za_prikaz(racun_18_cifara):
+    # Ako račun ima tačno 18 cifara, delimo ga crticama radi lakšeg čitanja (xxx-xxxxxxxxxxxxx-xx)
     if len(racun_18_cifara) == 18:
         return f"{racun_18_cifara[:3]}-{racun_18_cifara[3:-2]}-{racun_18_cifara[-2:]}"
     return racun_18_cifara
@@ -40,15 +47,19 @@ st.title("💰 Podela troškova")
 
 with st.expander("📖 Kako ovo radi?"):
     st.write("""
-    1. **Unesi svoj račun:** U levom meniju unesi svoje ime i broj računa.
-    2. **Unesi iznose:** Upiši vrednost sa računa i cenu dostave (ili otpremi sliku da očita QR kod).
-    3. **Odaberi metodu:** Ravnopravno ili ručni unos.
-    4. **Skeniranje:** Generiši IPS QR kodove za uplatu.
+    1. **Unesi svoj račun:** U levom meniju unesi svoje ime i broj računa (sistem sam dopunjava nule ako uneseš skraćeni broj sa kartice).
+    2. **Unesi iznose:** Upiši vrednost sa računa i cenu dostave.
+    3. **Odaberi metodu:**
+        * **Ravnopravno:** Unesi broj ljudi i dobijaš univerzalni QR kod.
+        * **Ručni unos:** Dodaš imena učesnika i uneseš pojedinačnu vrednost.
+    4. **Skeniranje:** Svako otvori mBanking, odabere 'IPS' i očita kod sa ekrana (univerzalni ili lični).
     """)
 
+# Priprema računa za pozadinu (18 cifara) i za ekran (sa crticama)
 c_racun = ocisti_racun(moj_racun) if moj_racun else ""
 prikaz_racuna = formatiraj_za_prikaz(c_racun) if c_racun else "Nije unet"
 
+# Veliki, pregledan prikaz sa crticama
 st.markdown(f"""
     <p style="font-size: 1.5rem; font-weight: 500; margin-top: 15px; margin-bottom: 0;">
         🏦 Ime primaoca: <b>{moje_ime if moje_ime else '...'}</b> | Račun primaoca: <b>{prikaz_racuna}</b>
@@ -63,24 +74,8 @@ col_levo, col_desno = st.columns([1, 1])
 with col_levo:
     st.subheader("📸 Račun")
     fajl = st.file_uploader("Otpremi dokument", type=['jpg', 'jpeg', 'png'], key=f"fajl_{sufiks}")
-    
     if fajl:
         st.image(fajl, use_container_width=True)
-        
-        file_bytes = np.asarray(bytearray(fajl.read()), dtype=np.uint8)
-        opencv_image = cv2.imdecode(file_bytes, 1)
-        
-        qr_detector = cv2.QRCodeDetector()
-        data, points, _ = qr_detector.detectAndDecode(opencv_image)
-        
-        if data:
-            st.success("✔ QR kod uspešno učitan sa računa!")
-            st.session_state[f"qr_url_{sufiks}"] = data
-            
-            with st.expander("Detalji očitanog linka"):
-                st.write(data)
-        else:
-            st.warning("⚠️ QR kod nije pronađen na slici. Pokušaj ponovo sa jasnijom fotografijom.")
 
 with col_desno:
     if st.button("🔄 Novi unos", use_container_width=True, type="primary"):
@@ -177,15 +172,14 @@ if validna_podela and suma_ukupno > 0:
             st.error("⚠️ Popuni podatke u sidebar-u!")
         else:
             if nacin == "Ravnopravno":
-                iznos_zajednicki = finalni_dugovi["Zajednički"]
-                iz_fmt = "{:.2f}".format(iznos_zajednicki).replace('.', ',')
+                iz_fmt = "{:.2f}".format(finalni_dugovi["Zajednički"]).replace('.', ',')
                 ips_data = f"K:PR|V:01|C:1|R:{c_racun}|N:{moje_ime}|I:RSD{iz_fmt}|SF:289|S:Podela racuna"
                 qr_img = qrcode.make(ips_data)
                 buf = BytesIO()
                 qr_img.save(buf, format="PNG")
                 _, col_qr, _ = st.columns([1, 1, 1])
                 with col_qr:
-                    st.image(buf.getvalue(), caption=f"Iznos: {iz_fmt} RSD", use_container_width=True)
+                    st.image(buf.getvalue(), caption=f"Iznos: {f'{finalni_dugovi['Zajednički']:.2f}'.replace('.', ',')} RSD", use_container_width=True)
             else:
                 qr_cols = st.columns(5)
                 for i, (ime, dug) in enumerate(finalni_dugovi.items()):
@@ -198,7 +192,7 @@ if validna_podela and suma_ukupno > 0:
                         with qr_cols[i % 5]:
                             st.markdown(f"**{ime}**")
                             st.image(buf.getvalue(), width=130)
-                            st.caption(f"{iz_fmt} RSD")
+                            st.caption(f"{f'{dug:.2f}'.replace('.', ',')} RSD")
 
 st.write("") 
 st.divider() 
